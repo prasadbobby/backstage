@@ -16,6 +16,8 @@
 
 const { join: joinPath } = require('path');
 
+const x = process.env.PATH.toUpperCase();
+
 /**
  * Creates a ESLint configuration that extends the base Backstage configuration.
  * In addition to the standard ESLint configuration options, the `extraConfig`
@@ -122,11 +124,15 @@ function createConfig(dir, extraConfig = {}) {
         },
       ],
 
-      'no-restricted-syntax': [
-        'error',
-        ...(restrictedSyntax ?? []),
-        ...(restrictedSrcSyntax ?? []),
-      ],
+      ...(restrictedSyntax?.length || restrictedSrcSyntax?.length
+        ? {
+            'no-restricted-syntax': [
+              'error',
+              ...(restrictedSyntax ?? []),
+              ...(restrictedSrcSyntax ?? []),
+            ],
+          }
+        : {}),
 
       ...rules,
     },
@@ -150,11 +156,17 @@ function createConfig(dir, extraConfig = {}) {
         ],
         rules: {
           ...testRules,
-          'no-restricted-syntax': [
-            'error',
-            ...(restrictedSyntax ?? []),
-            ...(restrictedTestSyntax ?? []),
-          ],
+
+          ...(restrictedSyntax?.length || restrictedTestSyntax?.length
+            ? {
+                'no-restricted-syntax': [
+                  'error',
+                  ...(restrictedSyntax ?? []),
+                  ...(restrictedTestSyntax ?? []),
+                ],
+              }
+            : {}),
+
           'no-restricted-imports': [
             2,
             {

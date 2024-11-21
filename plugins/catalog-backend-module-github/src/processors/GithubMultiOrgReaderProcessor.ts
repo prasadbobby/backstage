@@ -242,7 +242,7 @@ export class GithubMultiOrgReaderProcessor implements CatalogProcessor {
         install.account.login
           ? {
               name: install.account.login,
-              groupNamespace: install.account.login.toLowerCase(),
+              groupNamespace: install.account.login.toLocaleLowerCase('en-US'),
             }
           : undefined,
       )

@@ -29,6 +29,11 @@ import { PROTOCOL } from './constants';
 
 export const getCurrentBackstageVersion = () => {
   const workspaceRoot = ppath.resolve(findPaths(ppath.cwd()).targetRoot);
+  const backstageJsonPath = ppath.join(workspaceRoot, BACKSTAGE_JSON);
+
+  if (!xfs.existsSync(backstageJsonPath)) {
+    throw new Error('Valid version string not found in backstage.json');
+  }
 
   const backstageJson = xfs.readJsonSync(
     ppath.join(workspaceRoot, BACKSTAGE_JSON),
@@ -41,13 +46,6 @@ export const getCurrentBackstageVersion = () => {
   }
 
   return backstageVersion;
-};
-
-export const bindBackstageVersion = (
-  descriptor: Descriptor,
-  backstageVersion: string,
-) => {
-  return structUtils.bindDescriptor(descriptor, { v: backstageVersion });
 };
 
 export const getPackageVersion = async (
@@ -69,20 +67,10 @@ export const getPackageVersion = async (
     );
   }
 
-  if (!range.params?.v) {
-    throw new Error(
-      `Missing Backstage version parameter in range "${descriptor.range}" for package ${ident}`,
-    );
-  }
-
-  if (Array.isArray(range.params.v)) {
-    throw new Error(
-      `Multiple Backstage versions specified in range "${descriptor.range}" for package ${ident}`,
-    );
-  }
+  const backstageVersion = getCurrentBackstageVersion();
 
   const manifest = await getManifestByVersion({
-    version: range.params.v,
+    version: backstageVersion,
     // We override the fetch function used inside getManifestByVersion with a
     // custom implementation that calls yarn's built-in `httpUtils` method
     // instead. This has a couple of benefits:
@@ -121,7 +109,7 @@ export const getPackageVersion = async (
 
   if (!manifestEntry) {
     throw new Error(
-      `Package ${ident} not found in manifest for Backstage v${range.selector}. ` +
+      `Package ${ident} not found in manifest for Backstage v${backstageVersion}. ` +
         `This means the specified package is not included in this Backstage ` +
         `release. This may imply the package has been replaced with an alternative - ` +
         `please review the documentation for the package. If you need to continue ` +
